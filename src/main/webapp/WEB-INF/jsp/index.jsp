@@ -3,10 +3,36 @@
 <html>
 <head>
     <title>Welcome</title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
     <link rel="stylesheet" media="screen" type="text/css" href="<%=request.getContextPath() %>/bootstrap/css/bootstrap.min.css">
 
     <script src="${pageContext.request.contextPath}/bootstrap/js/bootstrap.min.js"></script>
 
+    <script language="javascript">
+        function addUser() {
+            var name = $('#id_name').val();
+            var pass = $('#id_pass').val();
+            $.ajax({
+                type: 'POST',
+                url: 'add_user.html',
+                dataType: "text",
+                async: false,
+                data: JSON.stringify({ name: name, pass: pass }),
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {
+                    if (result == "ok") {
+                        alert("You've signed up successfully");
+                    }
+                    if (result == "error") {
+                        alert("User with this username already exists");
+                    }
+                },
+                error: function() {
+                    alert("Ajax request broken");
+                }
+            });
+        }
+    </script>
     <meta charset="utf-8">
 
     <style type="text/css">
@@ -28,20 +54,24 @@
 
 <div class="container" align="center">
 
-    <form class="form-signin" role="form" method="post"  action="<c:url value='content.html' />">
+    <div class="form-signin">
+    <form role="form" method="post"  action="<c:url value='/j_spring_security_check.html' />">
         <h2 class="form-signin-heading">Please sign in</h2>
         <br>
-        <input type="text" name = "j_username" class="form-control" style="height: auto; font-size: 16px; " placeholder="Login" required autofocus>
+        <input type="text" name = "j_username" id="id_name" class="form-control" style="height: auto; font-size: 16px; " placeholder="Login" required autofocus>
         <br>
-        <input type="password" name="j_password" class="form-control" style="height: auto; font-size: 16px; " placeholder="Password" required>
+        <input type="password" name="j_password" id="id_pass" class="form-control" style="height: auto; font-size: 16px; " placeholder="Password" required>
         <br>
         <font color="FF0000">
             ${auth_status}
         </font>
         <br>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-        <br>
+
     </form>
+    <button class="btn btn-lg btn-success btn-block" onclick="addUser();">Sign up</button>
+    <br>
+    </div>
 
 </div>
 </body>

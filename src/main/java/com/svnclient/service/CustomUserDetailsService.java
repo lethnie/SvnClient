@@ -34,10 +34,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         UserTable domainUser = userDAO.findUserByName(login);
 
-        boolean enabled = true;
-        boolean accountNonExpired = true;
-        boolean credentialsNonExpired = true;
-        boolean accountNonLocked = true;
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
 
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
@@ -45,41 +41,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new User(
                 domainUser.getName(),
                 domainUser.getPassword(),
-                enabled,
-                accountNonExpired,
-                credentialsNonExpired,
-                accountNonLocked,
                 authorities
         );
     }
-
-    /*public Collection<? extends GrantedAuthority> getAuthorities(Integer role) {
-        List<GrantedAuthority> authList = getGrantedAuthorities(getRoles(role));
-        return authList;
-    }
-
-    public List<String> getRoles(Integer role) {
-
-        List<String> roles = new ArrayList<String>();
-
-        if (role.intValue() == 1) {
-            roles.add("ROLE_PATIENT");
-        } else if (role.intValue() == 2) {
-            roles.add("ROLE_REGISTRY");
-        } else if (role.intValue() == 3) {
-            roles.add("ROLE_DOCTOR");
-        } else if (role.intValue() == 4) {
-            roles.add("ROLE_NURSE");
-        }
-        return roles;
-    }
-
-    public static List<GrantedAuthority> getGrantedAuthorities(List<String> roles) {
-        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-
-        for (String role : roles) {
-            authorities.add(new SimpleGrantedAuthority(role));
-        }
-        return authorities;
-    }*/
 }

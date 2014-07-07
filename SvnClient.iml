@@ -84,6 +84,7 @@
     <orderEntry type="library" name="Maven: org.antlr:stringtemplate:4.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.javaee:jboss-transaction-api:1.0.1.GA" level="project" />
     <orderEntry type="library" name="Maven: org.jboss:jandex:1.1.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
   </component>
 </module>

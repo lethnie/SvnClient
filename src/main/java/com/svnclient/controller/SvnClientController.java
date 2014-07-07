@@ -1,29 +1,29 @@
 package com.svnclient.controller;
 
+import com.svnclient.domain.UserTable;
+import com.svnclient.service.UserService;
 import org.apache.commons.lang.StringUtils;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.tmatesoft.svn.core.*;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
-import org.tmatesoft.svn.core.auth.SVNAuthentication;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
-import org.tmatesoft.svn.core.internal.wc.DefaultSVNOptions;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Iterator;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,11 +34,28 @@ import java.util.Iterator;
  */
 @Controller
 public class SvnClientController {
+    @Autowired
+    private UserService userService;
 
     @RequestMapping(value = "/index.html", method = RequestMethod.GET)
     public String index(Model model, @RequestParam(required=false) String auth_status) {
         model.addAttribute("auth_status", auth_status);
-        return "index";
+        System.out.println(SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal().toString());
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (!auth.isAuthenticated()) {
+            model.addAttribute("auth_status", auth_status);
+            return "index";
+        }
+        else {
+            if ( auth.getPrincipal().equals("guest")) {
+                model.addAttribute("auth_status", auth_status);
+                return "index";
+            } else {
+                return "redirect:content.html";
+            }
+        }
     }
 
     @RequestMapping(value = "/content.html")
@@ -57,12 +74,16 @@ public class SvnClientController {
     public String getContent(String url, String filePath) {
         String name;
         String password;
-        /* TODO: User user =
-                (User) SecurityContextHolder.getContext()
+        System.out.println(SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal().toString());
+        User user = (User) SecurityContextHolder.getContext()
                         .getAuthentication()
                         .getPrincipal();
         name = user.getUsername();
-        password = user.getPassword();*/
+        password = user.getPassword();
+        //TODO: delete
+        System.out.println(name + " " + password);
         name = "anonymous";
         password = "anonymous";
         setupLibrary();
@@ -146,10 +167,38 @@ public class SvnClientController {
         return result;
     }
 
-    /*
-     * Initializes the library to work with a repository via
-     * different protocols.
-     */
+    @RequestMapping(value="/add_user.html", method=RequestMethod.POST)
+    public @ResponseBody
+    String getDataList(@RequestBody String param) {
+
+        String name = "";
+        String pass = "";
+
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(param);
+
+            JSONObject jsonObject = (JSONObject) obj;
+
+            name = (String) jsonObject.get("name");
+            pass = (String) jsonObject.get("pass");
+        }
+        catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if (userService.findUserByName(name) != null) {
+            return "error";
+        }
+
+        UserTable userTable = new UserTable();
+        userTable.setName(name);
+        userTable.setPassword(pass);
+        userService.addUser(userTable);
+
+        return "ok";
+    }
+
     private void setupLibrary() {
         DAVRepositoryFactory.setup();
         SVNRepositoryFactoryImpl.setup();
