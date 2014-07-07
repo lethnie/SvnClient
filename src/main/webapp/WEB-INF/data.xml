@@ -39,4 +39,8 @@
             </props>
         </property>
     </bean>
+
+    <bean id="customUserDetailsService"
+          class="com.svnclient.service.CustomUserDetailsService">
+    </bean>
 </beans>

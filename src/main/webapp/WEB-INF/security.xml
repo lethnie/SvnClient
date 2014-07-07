@@ -10,25 +10,32 @@
 
     <import resource="data.xml" />
 
-   <!-- <security:http auto-config="true">
-        <security:intercept-url pattern="/pattern*" access="ROLE_ADMIN" />
-        <security:form-login
-                login-page="/index.html"
-                login-processing-url="/j_spring_security_check.html"
-                default-target-url="/index.html"
-                authentication-failure-url="/index.html?auth_status=Wrong login or password"
-                authentication-success-handler-ref="successHandler"
-                />
-        <security:access-denied-handler error-page="/access_denied.html"/>
-        <security:logout
-                logout-url="/j_spring_security_logout.html"
+    <security:http auto-config="true">
+         <security:intercept-url pattern="/index*" access="ROLE_ANONYMOUS" />
+         <security:intercept-url pattern="/repositories*" access="ROLE_USER" />
+         <security:form-login
+                 login-page="/index.html"
+                 login-processing-url="/j_spring_security_check.html"
+                 default-target-url="/index.html"
+                 authentication-failure-url="/index.html?auth_status=Wrong login or password"
+                 authentication-success-handler-ref="successHandler"
+                 />
+         <security:anonymous username="guest" granted-authority="ROLE_ANONYMOUS"/>
+         <security:access-denied-handler error-page="/access_denied.html"/>
+         <security:logout
+                 logout-url="/j_spring_security_logout.html"
+                 logout-success-url="/index.html"
+                 />
+         <security:anonymous username="guest" granted-authority="ROLE_ANONYMOUS"/>
+         <security:remember-me/>
+     </security:http>
 
-                logout-success-url="/index.html"
-                />
-        <security:anonymous username="guest" granted-authority="ROLE_ANONYMOUS"/>
-        <security:remember-me/>
-    </security:http>
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="customUserDetailsService">
 
-    <bean id="successHandler" class="com.svnclient.controller.SvnClientAuthenticationSuccessHandler"/>
-    -->
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+     <bean id="successHandler" class="com.svnclient.controller.SvnClientAuthenticationSuccessHandler"/>
+
 </beans>
