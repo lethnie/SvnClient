@@ -5,7 +5,9 @@
   Time: 10:38
   To change this template use File | Settings | File Templates.
 --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <html>
 <head>
     <title>SVN Client</title>
@@ -53,19 +55,19 @@
         <table class="table table-striped">
             <thead>
             <tr>
-                <th>#</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Username</th>
+                <th>name</th>
+                <th>commit</th>
+                <th>date</th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>1</td>
-                <td>Mark</td>
-                <td>Otto</td>
-                <td>@mdo</td>
-            </tr>
+            <c:forEach items="${files}" var="file">
+                <tr>
+                    <td class="name"><img src="<%=request.getContextPath() %>/images/${fn:escapeXml(file.type)}.png" width="20px" height="20px"/> ${fn:escapeXml(file.name)}</td>
+                    <td class="message">${fn:escapeXml(file.message)}</td>
+                    <td class="date">${fn:escapeXml(file.date)}</td>
+                </tr>
+            </c:forEach>
             </tbody>
         </table>
     </div>

@@ -25,6 +25,7 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -58,7 +59,7 @@ public class SvnClientController {
                 model.addAttribute("auth_status", auth_status);
                 return "index";
             } else {
-                return "redirect:repositories.html";
+                return "redirect:directory.html";
             }
         }
     }
@@ -66,7 +67,7 @@ public class SvnClientController {
     @RequestMapping(value = "/repositories.html")
     public String content(Model model) {
         String url = "http://svn.svnkit.com/repos/svnkit/trunk/";
-        String filePath = "README.txt";
+        String filePath = "svnkit";
 
         String name;
         String password;
@@ -94,32 +95,29 @@ public class SvnClientController {
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(name, password);
         repository.setAuthenticationManager(authManager);
 
-        System.out.println("HERE WE ARE");
         try {
             SVNNodeKind nodeKind = repository.checkPath(filePath, -1);
             if (nodeKind == SVNNodeKind.DIR) {
                 List<FileInfo> files = getDirContent(repository, filePath);
                 model.addAttribute("files", files);
-                return "repositories";
+                return "directory";
             }
             if (nodeKind == SVNNodeKind.FILE) {
-                System.out.println("HERE WE ARE 1");
                 String file = getFileContent(repository, filePath);
                 Integer count = StringUtils.countMatches(file, "\n");
                 count++;
                 file = file.replace("\n", "<br>");
                 model.addAttribute("file", file);
                 model.addAttribute("count", count);
-                System.out.println("HERE WE ARE 2");
-                return "content";
+                return "file";
             }
             model.addAttribute("file", "wrong file path: ".concat(filePath));
             model.addAttribute("count", 1);
-            return "content";
+            return "file";
         } catch (SVNException svne) {
             model.addAttribute("file", "error while fetching the file contents and properties: " + svne.getMessage());
             model.addAttribute("count", 1);
-            return "content";
+            return "file";
         }
     }
 
@@ -164,17 +162,19 @@ public class SvnClientController {
                 SVNDirEntry entry = (SVNDirEntry)iterator.next();
                 FileInfo fileInfo = new FileInfo();
                 if (entry.getKind() == SVNNodeKind.DIR) {
-                    fileInfo.setType("DIR");
+                    fileInfo.setType("dir");
                 } else {
                     if (entry.getKind() == SVNNodeKind.FILE) {
-                        fileInfo.setType("FILE");
+                        fileInfo.setType("file");
                     } else {
-                        fileInfo.setType("UNKNOWN");
+                        fileInfo.setType("unknown");
                     }
                 }
                 fileInfo.setName(entry.getName());
                 fileInfo.setMessage(entry.getCommitMessage());
-                fileInfo.setDate(entry.getDate().toString());
+                SimpleDateFormat f = new SimpleDateFormat("dd-MM-yyyy");
+                String date = f.format(entry.getDate());
+                fileInfo.setDate(date);
                 result.add(fileInfo);
             }
         } catch (SVNException ex) {
