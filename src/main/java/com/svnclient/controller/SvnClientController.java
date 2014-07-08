@@ -4,6 +4,7 @@ import com.svnclient.domain.UserTable;
 import com.svnclient.dto.FileInfo;
 import com.svnclient.service.UserService;
 import org.apache.commons.lang.StringUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -26,10 +27,7 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -64,10 +62,10 @@ public class SvnClientController {
         }
     }
 
-    @RequestMapping(value = "/repositories.html")
+    @RequestMapping(value = "/directory.html")
     public String content(Model model) {
         String url = "http://svn.svnkit.com/repos/svnkit/trunk/";
-        String filePath = "svnkit";
+        String filePath = "";
 
         String name;
         String password;
@@ -185,7 +183,7 @@ public class SvnClientController {
 
     @RequestMapping(value="/add_user.html", method=RequestMethod.POST)
     public @ResponseBody
-    String getDataList(@RequestBody String param) {
+    String addUser(@RequestBody String param) {
 
         String name = "";
         String pass = "";
@@ -213,6 +211,98 @@ public class SvnClientController {
         userService.addUser(userTable);
 
         return "ok";
+    }
+
+    @RequestMapping(value="/get_data.html", method=RequestMethod.POST)
+    public @ResponseBody
+    String getData(@RequestBody String param) {
+
+        String filepath = "";
+
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(param);
+
+            JSONObject jsonObject = (JSONObject) obj;
+
+            filepath = (String) jsonObject.get("filepath");
+        }
+        catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        filepath = filepath.replaceFirst("/", "");
+        System.out.println("PATH: " + filepath);
+
+        String url = "http://svn.svnkit.com/repos/svnkit/trunk/";
+
+        String name;
+        String password;
+        System.out.println(SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal().toString());
+        User user = (User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+        name = user.getUsername();
+        password = user.getPassword();
+        //TODO: delete
+        System.out.println(name + " " + password);
+        name = "anonymous";
+        password = "anonymous";
+
+        setupLibrary();
+
+        SVNRepository repository = null;
+        try {
+            repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
+        } catch (SVNException svnex) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "error");
+            return jsonObject.toJSONString();
+        }
+
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(name, password);
+        repository.setAuthenticationManager(authManager);
+
+        try {
+            SVNNodeKind nodeKind = repository.checkPath(filepath, -1);
+            if (nodeKind == SVNNodeKind.DIR) {
+                List<FileInfo> files = getDirContent(repository, filepath);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("type", "dir");
+
+                JSONArray jsonArray = new JSONArray();
+
+                for (FileInfo fileInfo : files) {
+                    JSONObject obj = new JSONObject();
+                    obj.put("type", fileInfo.getType());
+                    obj.put("name", fileInfo.getName());
+                    obj.put("message", fileInfo.getMessage());
+                    obj.put("date", fileInfo.getDate());
+                    jsonArray.add(obj);
+                }
+                jsonObject.put("files", jsonArray);
+                return jsonObject.toJSONString();
+            }
+            if (nodeKind == SVNNodeKind.FILE) {
+                String file = getFileContent(repository, filepath);
+                Integer count = StringUtils.countMatches(file, "\n");
+                count++;
+                file = file.replace("\n", "<br>");
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("type", "file");
+                jsonObject.put("file", file);
+                return jsonObject.toJSONString();
+            }
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "unknown");
+            return jsonObject.toJSONString();
+        } catch (SVNException svne) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "error");
+            return jsonObject.toJSONString();
+        }
     }
 
     private void setupLibrary() {

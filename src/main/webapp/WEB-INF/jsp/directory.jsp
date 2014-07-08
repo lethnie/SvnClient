@@ -11,10 +11,54 @@
 <html>
 <head>
     <title>SVN Client</title>
+    <script type="text/javascript" src="<%=request.getContextPath() %>/jquery-1.11.1.min.js"></script>
     <link rel="stylesheet" media="screen" type="text/css" href="<%=request.getContextPath() %>/bootstrap/css/bootstrap.min.css">
 
     <script src="${pageContext.request.contextPath}/bootstrap/js/bootstrap.min.js"></script>
 
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(document).on('click', ".name", function() {
+                var filename = $(this).text();
+                if ($("#id_path").children().size() > 1) {
+                    $("#id_path").append($("<p></p>")
+                            .attr("style", "padding-left: 5px; display: inline-block;")
+                            .text("/"));
+                }
+                $("#id_path").append($("<b></b>")
+                        .attr("class", "text-link path")
+                        .attr("style", "padding-left: 5px; display: inline-block;")
+                        .text(filename));
+                getFileData();
+            });
+
+            $(document).on('click', ".path", function() {
+                $(this).nextAll().remove();
+                getFileData();
+            });
+
+            function getFileData() {
+                var filepath = "";
+                $("#id_path").children().each(function() {
+                    filepath = filepath.concat($(this).text());
+                });
+                $.ajax({
+                    type: 'POST',
+                    url: 'get_data.html',
+                    dataType: "text",
+                    async: false,
+                    data: JSON.stringify({ filepath: filepath }),
+                    contentType: "application/json; charset=utf-8",
+                    success: function(result) {
+                        alert(result);
+                    },
+                    error: function() {
+                        alert("Ajax request broken");
+                    }
+                });
+            }
+        });
+    </script>
     <meta charset="utf-8">
 
     <style type="text/css">
@@ -40,6 +84,10 @@
         .table-striped {
             margin: 10px;
         }
+
+        .text-link:hover {
+            color: blue;
+        }
     </style>
 </head>
 <body>
@@ -47,11 +95,11 @@
 <%@include file='navbar.html' %>
 
 <div style="position:fixed; left:50%; padding-top: 60px;">
-    <div class="div-area">
-        <b style="padding-left: 30px;"><a href="#">Rep1/lala</a></b>
+    <div class="div-area" id="id_path">
+        <p style="padding-left: 30px; display: inline-block;">/</p>
     </div>
 
-    <div class="col-md-6 div-area" align="center">
+    <div class="col-md-6 div-area">
         <table class="table table-striped">
             <thead>
             <tr>
@@ -63,15 +111,16 @@
             <tbody>
             <c:forEach items="${files}" var="file">
                 <tr>
-                    <td class="name"><img src="<%=request.getContextPath() %>/images/${fn:escapeXml(file.type)}.png" width="20px" height="20px"/> ${fn:escapeXml(file.name)}</td>
-                    <td class="message">${fn:escapeXml(file.message)}</td>
-                    <td class="date">${fn:escapeXml(file.date)}</td>
+                    <td><img src="<%=request.getContextPath() %>/images/${fn:escapeXml(file.type)}.png" width="20px" height="20px" style="display:inline-block;"/>
+                        <p class="name text-link" style="display:inline-block;">${fn:escapeXml(file.name)}</p>
+                    </td>
+                    <td><p class="message">${fn:escapeXml(file.message)}</p></td>
+                    <td><p class="date">${fn:escapeXml(file.date)}</p></td>
                 </tr>
             </c:forEach>
             </tbody>
         </table>
     </div>
-</div>
 </div>
 
 </body>
