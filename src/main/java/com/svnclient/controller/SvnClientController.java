@@ -293,6 +293,7 @@ public class SvnClientController {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("type", "file");
                 jsonObject.put("file", file);
+                jsonObject.put("count", count);
                 return jsonObject.toJSONString();
             }
             JSONObject jsonObject = new JSONObject();
