@@ -16,6 +16,7 @@ public class FileInfo {
     private String name;
     private String message;
     private String date;
+    private String author;
 
     public String getType() {
         return type;
@@ -47,5 +48,13 @@ public class FileInfo {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }

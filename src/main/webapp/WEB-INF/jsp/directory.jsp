@@ -35,6 +35,10 @@
                 getFileData();
             });
 
+            $(document).on('click', "#id_download", function() {
+                alert("download! he-he");
+            });
+
             function getFileData() {
                 var filepath = "";
                 $("#id_path").children().each(function() {
@@ -59,6 +63,7 @@
 
             function Callback(result) {
                 $('.div-data').empty();
+                $("#id_download").remove();
                 var jsonData = JSON.parse(result);
                 if (jsonData.type == "file") {
                     $('.div-data').append($("<div></div>")
@@ -68,9 +73,12 @@
                                         .attr("style", "background-color: rgba(247,247,247,0.8);")
                                         .html(jsonData.file)));
                     $("#id_text").addClass("text-area");
+                    $("#id_nav").prepend('<li id="id_download"><a href="">Download</a></li>');
+                    /////////////////////////////////////////////////////////////////////////////////////////////
                     //$("#id_line").addClass("lines-area");
                     return;
                 }
+
                 if (jsonData.type == "dir") {
                     $('.div-data').append($("<div></div>")
                             .attr("id", "id_div_area")
@@ -82,6 +90,8 @@
                                                             .text("name"))
                                                     .append($("<th></th>")
                                                             .text("commit"))
+                                                    .append($("<th></th>")
+                                                            .text("author"))
                                                     .append($("<th></th>")
                                                             .text("date"))))
                                     .append($("<tbody></tbody>")
@@ -101,10 +111,13 @@
                                                 .text(" " + jsonData.files[i].name)))
                                 .append($("<td></td>")
                                         .append($("<p></p>")
-                                                .text(jsonData.files[i].message)))
+                                                .text(jsonData.files[i].message == null ? "" : jsonData.files[i].message)))
                                 .append($("<td></td>")
                                         .append($("<p></p>")
-                                                .text(jsonData.files[i].date))));
+                                                .text(jsonData.files[i].author == null ? "" : jsonData.files[i].author)))
+                                .append($("<td></td>")
+                                        .append($("<p></p>")
+                                                .text(jsonData.files[i].date == null ? "" : jsonData.files[i].date))));
 
                     }
                     $('p[name=id_text_name]').addClass("name text-link");
@@ -182,6 +195,7 @@
                 <tr>
                     <th>name</th>
                     <th>commit</th>
+                    <th>author</th>
                     <th>date</th>
                 </tr>
                 </thead>
@@ -192,6 +206,7 @@
                             <p class="name text-link" style="display:inline-block;">${fn:escapeXml(file.name)}</p>
                         </td>
                         <td><p class="message">${fn:escapeXml(file.message)}</p></td>
+                        <td><p class="author">${fn:escapeXml(file.author)}</p></td>
                         <td><p class="date">${fn:escapeXml(file.date)}</p></td>
                     </tr>
                 </c:forEach>

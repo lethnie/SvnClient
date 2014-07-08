@@ -169,6 +169,7 @@ public class SvnClientController {
                     }
                 }
                 fileInfo.setName(entry.getName());
+                fileInfo.setAuthor(entry.getAuthor());
                 fileInfo.setMessage(entry.getCommitMessage());
                 SimpleDateFormat f = new SimpleDateFormat("dd-MM-yyyy");
                 String date = f.format(entry.getDate());
@@ -283,6 +284,7 @@ public class SvnClientController {
                     obj.put("type", fileInfo.getType());
                     obj.put("name", fileInfo.getName());
                     obj.put("message", fileInfo.getMessage());
+                    obj.put("author", fileInfo.getAuthor());
                     obj.put("date", fileInfo.getDate());
                     jsonArray.add(obj);
                 }
