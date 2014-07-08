@@ -1,6 +1,7 @@
 package com.svnclient.controller;
 
 import com.svnclient.domain.UserTable;
+import com.svnclient.dto.FileInfo;
 import com.svnclient.service.UserService;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
@@ -24,6 +25,10 @@ import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -53,33 +58,24 @@ public class SvnClientController {
                 model.addAttribute("auth_status", auth_status);
                 return "index";
             } else {
-                return "redirect:content.html";
+                return "redirect:repositories.html";
             }
         }
     }
 
-    @RequestMapping(value = "/content.html")
+    @RequestMapping(value = "/repositories.html")
     public String content(Model model) {
         String url = "http://svn.svnkit.com/repos/svnkit/trunk/";
         String filePath = "README.txt";
-        String file = getContent(url, filePath);
-        Integer count = StringUtils.countMatches(file, "\n");
-        count++;
-        file = file.replace("\n", "<br>");
-        model.addAttribute("file", file);
-        model.addAttribute("count", count);
-        return "content";
-    }
 
-    public String getContent(String url, String filePath) {
         String name;
         String password;
         System.out.println(SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal().toString());
         User user = (User) SecurityContextHolder.getContext()
-                        .getAuthentication()
-                        .getPrincipal();
+                .getAuthentication()
+                .getPrincipal();
         name = user.getUsername();
         password = user.getPassword();
         //TODO: delete
@@ -98,51 +94,56 @@ public class SvnClientController {
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(name, password);
         repository.setAuthenticationManager(authManager);
 
-        /*
-         * This Map will be used to get the file properties. Each Map key is a
-         * property name and the value associated with the key is the property
-         * value.
-         */
-        SVNProperties fileProperties = new SVNProperties();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+        System.out.println("HERE WE ARE");
         try {
             SVNNodeKind nodeKind = repository.checkPath(filePath, -1);
-
-            if (nodeKind == SVNNodeKind.NONE) {
-                return "wrong file path: ".concat(filePath);
-            }
             if (nodeKind == SVNNodeKind.DIR) {
-                return "dir path: ".concat(filePath);
+                List<FileInfo> files = getDirContent(repository, filePath);
+                model.addAttribute("files", files);
+                return "repositories";
             }
-            repository.getFile(filePath, -1, fileProperties, baos);
-
+            if (nodeKind == SVNNodeKind.FILE) {
+                System.out.println("HERE WE ARE 1");
+                String file = getFileContent(repository, filePath);
+                Integer count = StringUtils.countMatches(file, "\n");
+                count++;
+                file = file.replace("\n", "<br>");
+                model.addAttribute("file", file);
+                model.addAttribute("count", count);
+                System.out.println("HERE WE ARE 2");
+                return "content";
+            }
+            model.addAttribute("file", "wrong file path: ".concat(filePath));
+            model.addAttribute("count", 1);
+            return "content";
         } catch (SVNException svne) {
-            return "error while fetching the file contents and properties: " + svne.getMessage();
+            model.addAttribute("file", "error while fetching the file contents and properties: " + svne.getMessage());
+            model.addAttribute("count", 1);
+            return "content";
         }
+    }
 
+    /*@RequestMapping(value = "/svn/{name}", method=RequestMethod.GET)
+    public String getSvnRep(Model model, @PathVariable("name") String name, @RequestBody(required=false) String param) {
+        System.out.println("SVN!!!");
+        System.out.println(name);
+        System.out.println(param);
+        return "repositories";
+    }*/
+
+    public String getFileContent(SVNRepository repository, String filePath) {
+        String result = "";
+        SVNProperties fileProperties = new SVNProperties();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            repository.getFile(filePath, -1, fileProperties, baos);
+        } catch (SVNException ex) {
+            return "error while fetching the file contents and properties: " + ex.getMessage();
+        }
         String mimeType = fileProperties.getStringValue(SVNProperty.MIME_TYPE);
         boolean isTextType = SVNProperty.isTextMimeType(mimeType);
-
-        /*Iterator iterator = fileProperties.nameSet().iterator();
-
-        //Displays file properties.
-
-        while (iterator.hasNext()) {
-            String propertyName = (String) iterator.next();
-            String propertyValue = fileProperties.getStringValue(propertyName);
-            System.out.println("File property: " + propertyName + "="
-                    + propertyValue);
-        }*/
-        /*
-         * Displays the file contents in the console if the file is a text.
-         */
-        String result = "";
         if (isTextType) {
-            //System.out.println("File contents:");
-            //System.out.println();
             try {
-                //baos.writeTo(System.out);
                 result = baos.toString("UTF-8");
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -150,20 +151,35 @@ public class SvnClientController {
         } else {
             return "file contents can not be displayed.";
         }
-        //System.out.println(result);
-        /*
-         * Gets the latest revision number of the repository
-         */
-        /*long latestRevision = -1;
+        return result;
+    }
+
+    public List<FileInfo> getDirContent(SVNRepository repository, String filePath) {
+        ArrayList<FileInfo> result = new ArrayList<FileInfo>();
+        SVNProperties dirProperties = new SVNProperties();
         try {
-            latestRevision = repository.getLatestRevision();
-        } catch (SVNException svne) {
-            System.err.println("error while fetching the latest repository revision: " + svne.getMessage());
-            System.exit(1);
+            Collection dirs = repository.getDir(filePath, -1, dirProperties, (Collection) null);
+            Iterator iterator = dirs.iterator();
+            while (iterator.hasNext()) {
+                SVNDirEntry entry = (SVNDirEntry)iterator.next();
+                FileInfo fileInfo = new FileInfo();
+                if (entry.getKind() == SVNNodeKind.DIR) {
+                    fileInfo.setType("DIR");
+                } else {
+                    if (entry.getKind() == SVNNodeKind.FILE) {
+                        fileInfo.setType("FILE");
+                    } else {
+                        fileInfo.setType("UNKNOWN");
+                    }
+                }
+                fileInfo.setName(entry.getName());
+                fileInfo.setMessage(entry.getCommitMessage());
+                fileInfo.setDate(entry.getDate().toString());
+                result.add(fileInfo);
+            }
+        } catch (SVNException ex) {
+            return null;
         }
-        System.out.println("");
-        System.out.println("---------------------------------------------");
-        System.out.println("Repository latest revision: " + latestRevision);*/
         return result;
     }
 
