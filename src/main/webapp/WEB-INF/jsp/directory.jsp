@@ -20,11 +20,9 @@
         $(document).ready(function() {
             $(document).on('click', ".name", function() {
                 var filename = $(this).text();
-                if ($("#id_path").children().size() > 1) {
-                    $("#id_path").append($("<p></p>")
-                            .attr("style", "padding-left: 5px; display: inline-block;")
-                            .text("/"));
-                }
+                $("#id_path").append($("<p></p>")
+                        .attr("style", "padding-left: 5px; display: inline-block;")
+                        .text("/"));
                 $("#id_path").append($("<b></b>")
                         .attr("class", "text-link path")
                         .attr("style", "padding-left: 5px; display: inline-block;")
@@ -40,7 +38,8 @@
             function getFileData() {
                 var filepath = "";
                 $("#id_path").children().each(function() {
-                    filepath = filepath.concat($(this).text());
+                    var fpath = $(this).text().trim();
+                    filepath = filepath.concat(fpath);
                 });
                 $.ajax({
                     type: 'POST',
@@ -58,49 +57,60 @@
                 });
             }
 
-            /*function getText(text) {
-                var htmls = [];
-                var lines = text.split(/\n/);
-                var tmpDiv = jQuery(document.createElement('div'));
-                for (var i = 0 ; i < lines.length ; i++) {
-                    htmls.push(tmpDiv.text(lines[i]).html());
-                }
-                return htmls.join("<br>");
-            }*/
-
             function Callback(result) {
                 $('.div-data').empty();
                 var jsonData = JSON.parse(result);
                 if (jsonData.type == "file") {
-                    var count = jsonData.count;
-                    $('.div-data').append($("<div></div>")
-                            .attr("id", "id_line")
-                            //.addClass("lines-area")
-                            .append($("<code></code>")
-                                    .attr("id", "id_code")
-                                    .attr("style", "background-color: rgba(243,243,243,0.8);")));
-                    for (i = 1; i <= count; i++) {
-                        $('<font color="CCCCCC">' + i + ' </font>').appendTo('#id_code');
-                        $('<br>').appendTo('#id_code');
-                    }
                     $('.div-data').append($("<div></div>")
                             .attr("id", "id_text")
-                            .append($("<code></code>")
-                                    .attr("id", "id_code")
-                                    .attr("style", "background-color: rgba(247,247,247,0.8);")
-                                    .html(jsonData.file)));
-                    $("#id_line").addClass("lines-area");
+                                .append($("<code></code>")
+                                        .attr("id", "id_code")
+                                        .attr("style", "background-color: rgba(247,247,247,0.8);")
+                                        .html(jsonData.file)));
                     $("#id_text").addClass("text-area");
-                    alert("lalal");
+                    //$("#id_line").addClass("lines-area");
                     return;
                 }
                 if (jsonData.type == "dir") {
+                    $('.div-data').append($("<div></div>")
+                            .attr("id", "id_div_area")
+                            .append($("<table></table>")
+                                    .attr("id", "id_table")
+                                    .append($("<thead></thead>")
+                                            .append($("<tr></tr>")
+                                                    .append($("<th></th>")
+                                                            .text("name"))
+                                                    .append($("<th></th>")
+                                                            .text("commit"))
+                                                    .append($("<th></th>")
+                                                            .text("date"))))
+                                    .append($("<tbody></tbody>")
+                                            .attr("id", "id_tbody")
+                                    )));
+                    $("#id_div_area").addClass("col-md-6 div-area");
+                    $("#id_table").addClass("table table-striped");
                     for (var i = 0; i < jsonData.files.length; i++) {
-                        alert(jsonData.files[i].name);
+                        $("#id_tbody").append($("<tr></tr>")
+                                .append($("<td></td>")
+                                        .html('<img src="<%=request.getContextPath() %>/images/'
+                                                + jsonData.files[i].type
+                                                + '.png" height="20px" width="20px" style="display:inline-block;">')
+                                        .append($("<p></p>")
+                                                .attr("name", "id_text_name")
+                                                .attr("style", "display:inline-block;")
+                                                .text(" " + jsonData.files[i].name)))
+                                .append($("<td></td>")
+                                        .append($("<p></p>")
+                                                .text(jsonData.files[i].message)))
+                                .append($("<td></td>")
+                                        .append($("<p></p>")
+                                                .text(jsonData.files[i].date))));
+
                     }
+                    $('p[name=id_text_name]').addClass("name text-link");
                     return;
                 }
-                alert(":(");
+                alert(jsonData.type);
                 return;
             }
         });
@@ -126,33 +136,19 @@
         .text-area {
             background-color: rgba(247,247,247,0.8);
             border: 1px solid #e5e5e5;
+            border-bottom-left-radius: 10px;
+            border-top-left-radius: 10px;
             border-bottom-right-radius: 10px;
             border-top-right-radius: 10px;
             margin-top: 10px;
             margin-left: -5px;
             position:relative;
             left: 20%;
-            width: 55%;
+            width: 60%;
             padding-top: 10px;
             padding-left: 10px;
             padding-bottom: 10px;
             display:inline-block;
-        }
-
-        .lines-area {
-            background-color: rgba(243,243,243,0.8);
-            border: 1px solid #e5e5e5;
-            border-bottom-left-radius: 10px;
-            border-top-left-radius: 10px;
-            margin-top: 10px;
-            margin-left: 10px;
-            position:relative;
-            left: 20%;
-            padding-top: 10px;
-            padding-bottom: 10px;
-            text-align: right;
-            display:inline-block;
-            width: 30px;
         }
 
         .col-md-6 {
@@ -176,7 +172,7 @@
 
 <div style="padding-top: 60px; padding-bottom: 10px;">
     <div class="div-area" id="id_path">
-        <p style="padding-left: 30px; display: inline-block;">/</p>
+        <b class="text-link path" style="padding-left: 30px; display: inline-block;">..</b>
     </div>
 
     <div class="div-data">

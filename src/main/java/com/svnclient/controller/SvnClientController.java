@@ -231,10 +231,12 @@ public class SvnClientController {
             e.printStackTrace();
         }
 
+        filepath = filepath.replaceFirst("..", "");
         filepath = filepath.replaceFirst("/", "");
-        System.out.println("PATH: " + filepath);
+        filepath = filepath.replace(" ","");
 
         String url = "http://svn.svnkit.com/repos/svnkit/trunk/";
+
 
         String name;
         String password;
@@ -254,6 +256,7 @@ public class SvnClientController {
         setupLibrary();
 
         SVNRepository repository = null;
+        System.out.println("PATH: " + filepath + ", URL: " + url);
         try {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
         } catch (SVNException svnex) {
@@ -267,6 +270,7 @@ public class SvnClientController {
 
         try {
             SVNNodeKind nodeKind = repository.checkPath(filepath, -1);
+            System.out.println("NODEKIND: " + nodeKind.toString());
             if (nodeKind == SVNNodeKind.DIR) {
                 List<FileInfo> files = getDirContent(repository, filepath);
                 JSONObject jsonObject = new JSONObject();
@@ -287,13 +291,10 @@ public class SvnClientController {
             }
             if (nodeKind == SVNNodeKind.FILE) {
                 String file = getFileContent(repository, filepath);
-                Integer count = StringUtils.countMatches(file, "\n");
-                count++;
                 file = file.replace("\n", "<br>");
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("type", "file");
                 jsonObject.put("file", file);
-                jsonObject.put("count", count);
                 return jsonObject.toJSONString();
             }
             JSONObject jsonObject = new JSONObject();
