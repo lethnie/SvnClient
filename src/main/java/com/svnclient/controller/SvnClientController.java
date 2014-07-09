@@ -9,6 +9,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -22,10 +23,13 @@ import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.wc.ISVNOptions;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
+import org.tmatesoft.svn.core.wc.admin.SVNAdminClient;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -93,10 +97,20 @@ public class SvnClientController {
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(name, password);
         repository.setAuthenticationManager(authManager);
 
+        /*try {
+            repository.setLocation(SVNURL.parseURIEncoded("http://localhost:8080/SvnClient/svn/test"), false);
+        } catch (SVNException svnex) {
+            //return "wrong url: ".concat(url);
+            System.out.println(svnex.getMessage());
+        }*/
+
+
         try {
             SVNNodeKind nodeKind = repository.checkPath(filePath, -1);
             if (nodeKind == SVNNodeKind.DIR) {
+                //System.out.println("BEFORE");
                 List<FileInfo> files = getDirContent(repository, filePath);
+                //System.out.println("AFTER");
                 model.addAttribute("files", files);
                 return "directory";
             }
@@ -119,13 +133,29 @@ public class SvnClientController {
         }
     }
 
-    /*@RequestMapping(value = "/svn/{name}", method=RequestMethod.GET)
-    public String getSvnRep(Model model, @PathVariable("name") String name, @RequestBody(required=false) String param) {
+    @RequestMapping(value = "/svn")///{name}")
+    public String getSvnRep(Model model) {//}), @PathVariable("name") String name) {
         System.out.println("SVN!!!");
-        System.out.println(name);
-        System.out.println(param);
-        return "repositories";
-    }*/
+        //System.out.println(name);
+        //System.out.println(param);
+        //DAVRepositoryFactory.
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager("user", "pass");
+        ISVNOptions options = SVNWCUtil.createDefaultOptions(true);
+        SVNAdminClient svnAdminClient = new SVNAdminClient(authManager, options);
+        try {
+            System.out.println("1");
+            SVNURL url = svnAdminClient.doCreateRepository(new File("C:/Users/123/IdeaProjects/Test"), null, true, false);
+            System.out.println("2");
+            svnAdminClient.doInitialize(url, SVNURL.parseURIEncoded("http://localhost:8080/SvnClient/svn/test"));
+            System.out.println("3");
+            svnAdminClient.doSynchronize(SVNURL.parseURIEncoded("http://localhost:8080/SvnClient/svn/test"));
+            System.out.println("4");
+        }
+        catch (SVNException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return "directory";
+    }
 
     public String getFileContent(SVNRepository repository, String filePath) {
         String result = "";
@@ -271,7 +301,7 @@ public class SvnClientController {
 
         try {
             SVNNodeKind nodeKind = repository.checkPath(filepath, -1);
-            System.out.println("NODEKIND: " + nodeKind.toString());
+            //System.out.println("NODEKIND: " + nodeKind.toString());
             if (nodeKind == SVNNodeKind.DIR) {
                 List<FileInfo> files = getDirContent(repository, filepath);
                 JSONObject jsonObject = new JSONObject();
@@ -297,6 +327,27 @@ public class SvnClientController {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("type", "file");
                 jsonObject.put("file", file);
+
+                //////////////////////////////////////////////////////////////////////////////////
+                /*try {
+                    File newfile=new File(filepath);
+                    if (!newfile.exists()) {
+                        newfile.createNewFile();
+                    }
+
+                    FileOutputStream fop=new FileOutputStream(newfile);
+                    //SVNURL url=SVNURL.parseURIEncoded("http://svn.svnkit.com/repos/svnkit/<span id="IL_AD4" class="IL_AD">branches</span>/1.1.x/");
+                    //SVNRepository repository = SVNRepositoryFactory.create(url);
+                    repository.getFile(filepath, -1, null, fop);
+                    fop.flush();
+                    fop.close();
+
+                    System.out.println("Done!");
+                } catch (IOException ex) {
+                    System.out.println(ex.getMessage());
+                }*/
+                //////////////////////////////////////////////////////////////////////////////////
+
                 return jsonObject.toJSONString();
             }
             JSONObject jsonObject = new JSONObject();
@@ -306,6 +357,53 @@ public class SvnClientController {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", "error");
             return jsonObject.toJSONString();
+        }
+    }
+
+    private static final int BUFFER_SIZE = 4096;
+
+    @RequestMapping(value = "/get_file.html")//, method=RequestMethod.POST)
+    public @ResponseBody
+    void downloadFile(/*@RequestBody String param,*/
+                             final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+        //File file = fileSystem.getFile(name);
+        /*FileOutputStream fop=new FileOutputStream(newfile);
+        //SVNURL url=SVNURL.parseURIEncoded("http://svn.svnkit.com/repos/svnkit/<span id="IL_AD4" class="IL_AD">branches</span>/1.1.x/");
+        //SVNRepository repository = SVNRepositoryFactory.create(url);
+        repository.getFile(filepath, -1, null, fop);
+        fop.flush();
+        fop.close();*/
+        try {
+        SVNURL url=SVNURL.parseURIEncoded("http://svn.svnkit.com/repos/svnkit/trunk/");
+        SVNRepository repository = SVNRepositoryFactory.create(url);
+            OutputStream outputStream = response.getOutputStream();
+        repository.getFile("gradlew", -1, null, outputStream);
+            System.out.println("GET FILE");
+
+        //if (file == null) {
+        //    response.sendError(HttpStatus.NOT_FOUND.value());
+       // } else {
+            String mimeType = "application/octet-stream";
+            response.setContentType(mimeType);
+
+            //response.setContentLength(1000);
+            response.setHeader("Content-Disposition", String.format("attachment; filename=gradlew"));
+            System.out.println("OK");
+            //InputStream inputStream = new FileInputStream(file);
+            /*OutputStream outputStream = response.getOutputStream();
+
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int bread = -1;
+            while ((bread = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bread);
+            }
+            outputStream.close();
+            inputStream.close();*/
+        //}
+            outputStream.close();
+            System.out.println("OKOK");
+        } catch (SVNException ex) {
+            System.out.println(ex.getMessage());
         }
     }
 

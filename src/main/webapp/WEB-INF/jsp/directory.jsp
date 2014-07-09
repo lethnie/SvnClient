@@ -35,9 +35,32 @@
                 getFileData();
             });
 
-            $(document).on('click', "#id_download", function() {
-                alert("download! he-he");
-            });
+            /*$(document).on('click', "#id_download", function() {
+                //alert("download! he-he");
+                var filepath = "http://svn.svnkit.com/repos/svnkit/trunk";
+                $("#id_path").children().each(function() {
+                    var fpath = $(this).text().trim();
+                    if (fpath != "..")
+                        filepath = filepath.concat(fpath);
+                });
+                alert(filepath);
+                //window.open(filepath, "_blank", "");
+                $.ajax({
+                    type: 'POST',
+                    url: 'get_file.html',
+                    dataType: "text",
+                    async: false,
+                    data: JSON.stringify({ filepath: filepath }),
+                    contentType: "application/json; charset=utf-8",
+                    success: function(result) {
+                        //Callback(result);
+                        alert(result);
+                    },
+                    error: function() {
+                        alert("Ajax request broken");
+                    }
+                });
+            });*/
 
             function getFileData() {
                 var filepath = "";
@@ -73,7 +96,7 @@
                                         .attr("style", "background-color: rgba(247,247,247,0.8);")
                                         .html(jsonData.file)));
                     $("#id_text").addClass("text-area");
-                    $("#id_nav").prepend('<li id="id_download"><a href="">Download</a></li>');
+                    $("#id_nav").prepend('<li id="id_download"><a href="/SvnClient/get_file.html">Download</a></li>');
                     /////////////////////////////////////////////////////////////////////////////////////////////
                     //$("#id_line").addClass("lines-area");
                     return;
