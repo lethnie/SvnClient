@@ -35,17 +35,23 @@
                 getFileData();
             });
 
-            /*$(document).on('click', "#id_download", function() {
+            $(document).on('click', "#id_download", function() {
                 //alert("download! he-he");
-                var filepath = "http://svn.svnkit.com/repos/svnkit/trunk";
+                var filepath = "";//http://svn.svnkit.com/repos/svnkit/trunk";
                 $("#id_path").children().each(function() {
                     var fpath = $(this).text().trim();
                     if (fpath != "..")
                         filepath = filepath.concat(fpath);
                 });
-                alert(filepath);
+                //alert(filepath);
+                filepath = encodeURIComponent(filepath);
+                //alert(filepath);
+                var link = "/SvnClient/get_file.html?filepath=" + filepath;
+                $("#id_download_href").attr("href", link);
+                //$("#id_download_href").click();
+                //alert("lala");
                 //window.open(filepath, "_blank", "");
-                $.ajax({
+                /*$.ajax({
                     type: 'POST',
                     url: 'get_file.html',
                     dataType: "text",
@@ -59,8 +65,8 @@
                     error: function() {
                         alert("Ajax request broken");
                     }
-                });
-            });*/
+                });*/
+            });
 
             function getFileData() {
                 var filepath = "";
@@ -96,7 +102,8 @@
                                         .attr("style", "background-color: rgba(247,247,247,0.8);")
                                         .html(jsonData.file)));
                     $("#id_text").addClass("text-area");
-                    $("#id_nav").prepend('<li id="id_download"><a href="/SvnClient/get_file.html">Download</a></li>');
+                    //
+                    $("#id_nav").prepend('<li id="id_download"><a id="id_download_href" href="">Download</a></li>');
                     /////////////////////////////////////////////////////////////////////////////////////////////
                     //$("#id_line").addClass("lines-area");
                     return;
