@@ -9,7 +9,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -27,7 +26,6 @@ import org.tmatesoft.svn.core.wc.ISVNOptions;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 import org.tmatesoft.svn.core.wc.admin.SVNAdminClient;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -66,6 +64,7 @@ public class SvnClientController {
         }
     }
 
+    //get first directory content
     @RequestMapping(value = "/directory.html")
     public String content(Model model) {
         //TODO: correct url
@@ -204,6 +203,7 @@ public class SvnClientController {
         return result;
     }
 
+    //registration
     @RequestMapping(value="/add_user.html", method=RequestMethod.POST)
     public @ResponseBody
     String addUser(@RequestBody String param) {
@@ -236,6 +236,7 @@ public class SvnClientController {
         return "ok";
     }
 
+    //get file or directory content by filepath
     @RequestMapping(value="/get_data.html", method=RequestMethod.POST)
     public @ResponseBody
     String getData(@RequestBody String param) {
@@ -262,6 +263,7 @@ public class SvnClientController {
 
         String name;
         String password;
+        //TODO: delete
         System.out.println(SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal().toString());
@@ -330,6 +332,7 @@ public class SvnClientController {
         }
     }
 
+    //download file by filepath
     @RequestMapping(value = "/get_file.html", method=RequestMethod.GET)
     public void downloadFile(@RequestParam String filepath,
                              final HttpServletResponse response) throws IOException {
