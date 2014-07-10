@@ -1,7 +1,9 @@
 package com.svnclient.controller;
 
+import com.svnclient.domain.RepositoryTable;
 import com.svnclient.domain.UserTable;
 import com.svnclient.dto.FileInfo;
+import com.svnclient.service.RepositoryService;
 import com.svnclient.service.UserService;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
@@ -42,6 +44,9 @@ import java.util.*;
 public class SvnClientController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RepositoryService repositoryService;
 
     @RequestMapping(value = "/index.html", method = RequestMethod.GET)
     public String index(Model model, @RequestParam(required=false) String auth_status) {
@@ -123,28 +128,107 @@ public class SvnClientController {
         }
     }
 
-    //TODO: server???
-    @RequestMapping(value = "/svn")///{name}")
-    public String getSvnRep(Model model) {//}), @PathVariable("name") String name) {
-        System.out.println("SVN!!!");
-        //System.out.println(name);
-        //System.out.println(param);
-        //DAVRepositoryFactory.
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager("user", "pass");
+    @RequestMapping(value = "/new.html")
+    public String getNewRep(Map<String, Object> map, Model model) {
+        map.put("rep", new RepositoryTable());
+        return "new";
+    }
+
+    @RequestMapping(value = "/create.html", method = RequestMethod.POST)
+    public String createRep(@ModelAttribute("rep") RepositoryTable rep, Model model) {
+        String username = ((User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal()).getUsername();
+        UserTable user = userService.findUserByName(username);
+        String url = String.format("/svn/%s/%s", username, rep.getRepository());
+        //TODO: smth
+        String localURL = String.format("/svn/%s/%s", username, rep.getRepository());
+        rep.setUser(user);
+        rep.setLocalURL(localURL);
+        rep.setUrl(url);
+
+
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user.getName(), user.getPassword());
         ISVNOptions options = SVNWCUtil.createDefaultOptions(true);
         SVNAdminClient svnAdminClient = new SVNAdminClient(authManager, options);
         try {
-            System.out.println("1");
-            SVNURL url = svnAdminClient.doCreateRepository(new File("C:/Users/123/IdeaProjects/Test"), null, true, false);
-            System.out.println("2");
-            svnAdminClient.doInitialize(url, SVNURL.parseURIEncoded("http://localhost:8080/SvnClient/svn/test"));
-            System.out.println("3");
-            svnAdminClient.doSynchronize(SVNURL.parseURIEncoded("http://localhost:8080/SvnClient/svn/test"));
-            System.out.println("4");
+            SVNURL svnurl = svnAdminClient.doCreateRepository(new File(localURL), null, true, false);
+            rep.setLocalURL(svnurl.toString());
         }
         catch (SVNException ex) {
             System.out.println(ex.getMessage());
         }
+        repositoryService.addRep(rep);
+        return "redirect:".concat(url).concat(".html");
+    }
+
+    //TODO: server???
+    @RequestMapping(value = "/svn/{username}/{name}")
+    public String getSvnRep(Model model, @PathVariable("username") String username, @PathVariable("name") String name) {
+        //System.out.println("SVN!!! " + username + " " + name);
+
+        String usern = ((User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal()).getUsername();
+        UserTable user = userService.findUserByName(usern);
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user.getName(), user.getPassword());
+        RepositoryTable repositoryTable = repositoryService.findRepositoryByName(name);
+        String url = repositoryTable.getLocalURL();
+        String filePath = "";
+
+        setupLibrary();
+
+        SVNRepository repository = null;
+        try {
+            repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
+        } catch (SVNException svnex) {
+            return "wrong url: ".concat(url);
+        }
+
+        repository.setAuthenticationManager(authManager);
+
+        try {
+            SVNNodeKind nodeKind = repository.checkPath(filePath, -1);
+            if (nodeKind == SVNNodeKind.DIR) {
+                List<FileInfo> files = getDirContent(repository, filePath);
+                model.addAttribute("files", files);
+                return "directory";
+            }
+            if (nodeKind == SVNNodeKind.FILE) {
+                String file = getFileContent(repository, filePath);
+                Integer count = StringUtils.countMatches(file, "\n");
+                count++;
+                file = file.replace("\n", "<br>");
+                model.addAttribute("file", file);
+                model.addAttribute("count", count);
+                return "file";
+            }
+            model.addAttribute("file", "wrong file path: ".concat(filePath));
+            model.addAttribute("count", 1);
+            return "file";
+        } catch (SVNException svne) {
+            model.addAttribute("file", "error while fetching the file contents and properties: " + svne.getMessage());
+            model.addAttribute("count", 1);
+            return "file";
+        }
+    }
+
+    @RequestMapping(value = "/repositories.html")
+    public String getRepositories(Model model) {
+        String usern = ((User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal()).getUsername();
+        UserTable user = userService.findUserByName(usern);
+        List<RepositoryTable> repositories = repositoryService.findRepositoriesByUser(user);
+        List<FileInfo> files = new ArrayList<FileInfo>();
+        for (RepositoryTable repositoryTable : repositories) {
+            FileInfo fileInfo = new FileInfo();
+            fileInfo.setAuthor(user.getName());
+            fileInfo.setName(repositoryTable.getRepository());
+            fileInfo.setType("dir");
+            files.add(fileInfo);
+        }
+        model.addAttribute("files", files);
         return "directory";
     }
 

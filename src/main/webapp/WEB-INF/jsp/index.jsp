@@ -55,7 +55,7 @@
 <div class="container" align="center">
 
     <div class="form-signin">
-    <form role="form" method="post"  action="<c:url value='/j_spring_security_check.html' />">
+    <form role="form" method="post"  action="<c:url value='/j_spring_security_check' />">
         <h2 class="form-signin-heading">Please sign in</h2>
         <br>
         <input type="text" name = "j_username" id="id_name" class="form-control" style="height: auto; font-size: 16px; " placeholder="Login" required autofocus>

@@ -17,6 +17,8 @@ import java.io.Serializable;
 public class RepositoryTable implements Serializable {
     public static final String id_column = "repository_id";
     public static final String repository_column = "repository";
+    public static final String url_column = "url";
+    public static final String local_url_column = "local_url";
 
     public RepositoryTable() {
     }
@@ -24,6 +26,8 @@ public class RepositoryTable implements Serializable {
     private Integer id;
     private UserTable user;
     private String repository;
+    private String url;
+    private String localURL;
 
     @ManyToOne(fetch= FetchType.LAZY)
     @JoinColumn(name=UserTable.id_column)
@@ -54,5 +58,23 @@ public class RepositoryTable implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    @Column(name=url_column, nullable = false)
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    @Column(name=local_url_column, nullable = false)
+    public String getLocalURL() {
+        return localURL;
+    }
+
+    public void setLocalURL(String localURL) {
+        this.localURL = localURL;
     }
 }
