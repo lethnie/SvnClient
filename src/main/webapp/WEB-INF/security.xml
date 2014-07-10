@@ -16,7 +16,7 @@
         <security:intercept-url pattern="/content*" access="ROLE_USER" />
          <security:form-login
                  login-page="/index.html"
-                 login-processing-url="/j_spring_security_check"
+                 login-processing-url="/j_spring_security_check.html"
                  default-target-url="/index.html"
                  authentication-failure-url="/index.html?auth_status=Wrong login or password"
                  authentication-success-handler-ref="successHandler"
@@ -24,7 +24,7 @@
          <security:anonymous username="guest" granted-authority="ROLE_ANONYMOUS"/>
          <security:access-denied-handler error-page="/access_denied.html"/>
          <security:logout
-                 logout-url="/j_spring_security_logout"
+                 logout-url="/j_spring_security_logout.html"
                  logout-success-url="/index.html"
                  />
          <security:anonymous username="guest" granted-authority="ROLE_ANONYMOUS"/>

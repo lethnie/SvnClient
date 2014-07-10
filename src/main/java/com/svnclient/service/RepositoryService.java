@@ -17,5 +17,5 @@ public interface RepositoryService {
 
     public List<RepositoryTable> findRepositoriesByUser(UserTable user);
 
-    public RepositoryTable findRepositoryByName(String repository);
+    public RepositoryTable findRepositoryByNameAndUser(String repository, UserTable user);
 }

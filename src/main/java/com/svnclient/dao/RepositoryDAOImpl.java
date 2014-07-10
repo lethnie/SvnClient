@@ -37,9 +37,10 @@ public class RepositoryDAOImpl implements RepositoryDAO {
         return result;
     }
 
-    public RepositoryTable findRepositoryByName(String repository) {
+    public RepositoryTable findRepositoryByNameAndUser(String repository, UserTable user) {
         RepositoryTable result = (RepositoryTable)sessionFactory.getCurrentSession().createCriteria(RepositoryTable.class)
                 .add(Restrictions.eq("repository", repository))
+                .add(Restrictions.eq("user", user))
                 .uniqueResult();
         Hibernate.initialize(result.getUser());
         return result;

@@ -40,32 +40,14 @@
                 var filepath = "";//http://svn.svnkit.com/repos/svnkit/trunk";
                 $("#id_path").children().each(function() {
                     var fpath = $(this).text().trim();
-                    if (fpath != "..")
-                        filepath = filepath.concat(fpath);
+                    //if (fpath != "..")
+                    //    filepath = filepath.concat(fpath);
                 });
                 //alert(filepath);
                 filepath = encodeURIComponent(filepath);
-                //alert(filepath);
+                //TODO: full filepath, parse filepath
                 var link = "/SvnClient/get_file.html?filepath=" + filepath;
                 $("#id_download_href").attr("href", link);
-                //$("#id_download_href").click();
-                //alert("lala");
-                //window.open(filepath, "_blank", "");
-                /*$.ajax({
-                    type: 'POST',
-                    url: 'get_file.html',
-                    dataType: "text",
-                    async: false,
-                    data: JSON.stringify({ filepath: filepath }),
-                    contentType: "application/json; charset=utf-8",
-                    success: function(result) {
-                        //Callback(result);
-                        alert(result);
-                    },
-                    error: function() {
-                        alert("Ajax request broken");
-                    }
-                });*/
             });
 
             function getFileData() {
@@ -102,10 +84,7 @@
                                         .attr("style", "background-color: rgba(247,247,247,0.8);")
                                         .html(jsonData.file)));
                     $("#id_text").addClass("text-area");
-                    //
                     $("#id_nav").prepend('<li id="id_download"><a id="id_download_href" href="">Download</a></li>');
-                    /////////////////////////////////////////////////////////////////////////////////////////////
-                    //$("#id_line").addClass("lines-area");
                     return;
                 }
 
@@ -212,7 +191,7 @@
 
 <div style="padding-top: 60px; padding-bottom: 10px;">
     <div class="div-area" id="id_path">
-        <b class="text-link path" style="padding-left: 30px; display: inline-block;">..</b>
+        <b class="text-link path" style="padding-left: 30px; display: inline-block;">${repository_name}</b>
     </div>
 
     <div class="div-data">

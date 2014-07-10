@@ -32,7 +32,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Transactional
-    public RepositoryTable findRepositoryByName(String repository) {
-        return repositoryDAO.findRepositoryByName(repository);
+    public RepositoryTable findRepositoryByNameAndUser(String repository, UserTable user) {
+        return repositoryDAO.findRepositoryByNameAndUser(repository, user);
     }
 }

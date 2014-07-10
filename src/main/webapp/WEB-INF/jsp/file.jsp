@@ -71,7 +71,7 @@
 <%@include file='navbar.html' %>
 <div style=" padding-top: 60px; padding-bottom: 10px;">
     <div class="div-area">
-        <b style="padding-left: 30px;"><a href="#">Rep1/lala</a></b>
+        <b style="padding-left: 30px;"><a href="#">${repository_name}</a></b>
     </div>
 
     <div class="lines-area">
