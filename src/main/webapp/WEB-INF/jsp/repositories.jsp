@@ -76,7 +76,12 @@
                 </c:forEach>
                 </tbody>
             </table>
+            <br>
+            <font color="FF0000">
+                ${error_message}
+            </font>
         </div>
+
     </div>
 </div>
 

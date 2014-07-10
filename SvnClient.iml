@@ -41,7 +41,6 @@
     <orderEntry type="library" name="Maven: org.antlr:antlr-runtime:3.3" level="project" />
     <orderEntry type="library" name="Maven: com.trilead:trilead-ssh2:1.0.0-build215" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:jsp-api:2.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
     <orderEntry type="library" name="Maven: org.webjars:bootstrap:3.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.webjars:jquery:2.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.webjars:webjars-locator:0.1" level="project" />
@@ -84,6 +83,10 @@
     <orderEntry type="library" name="Maven: org.antlr:stringtemplate:4.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.javaee:jboss-transaction-api:1.0.1.GA" level="project" />
     <orderEntry type="library" name="Maven: org.jboss:jandex:1.1.0.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.tomcat:catalina:6.0.26" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.tomcat:servlet-api:6.0.26" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.tomcat:juli:6.0.26" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.tomcat:annotations-api:6.0.26" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
   </component>

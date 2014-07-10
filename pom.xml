@@ -43,15 +43,22 @@
           <artifactId>jsp-api</artifactId>
           <version>2.0</version>
           <scope>provided</scope>
+          <exclusions>
+              <exclusion>
+                  <groupId>javax.servlet</groupId>
+                  <artifactId>servlet-api</artifactId>
+              </exclusion>
+          </exclusions>
       </dependency>
       <dependency>
           <groupId>org.webjars</groupId>
           <artifactId>bootstrap</artifactId>
           <version>3.0.0</version>
-      </dependency><dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>webjars-locator</artifactId>
-      <version>0.1</version>
+      </dependency>
+      <dependency>
+          <groupId>org.webjars</groupId>
+          <artifactId>webjars-locator</artifactId>
+          <version>0.1</version>
       </dependency>
       <dependency>
           <groupId>org.webjars</groupId>
@@ -144,9 +151,16 @@
           <version>3.12.1.GA</version>
       </dependency>
       <dependency>
-          <groupId>jstl</groupId>
-          <artifactId>jstl</artifactId>
-          <version>1.2</version>
+          <groupId>org.apache.tomcat</groupId>
+          <artifactId>catalina</artifactId>
+          <version>6.0.26</version>
+          <scope>provided</scope>
+          <exclusions>
+              <exclusion>
+                  <groupId>javax.servlet</groupId>
+                  <artifactId>servlet-api</artifactId>
+              </exclusion>
+          </exclusions>
       </dependency>
       <dependency>
           <groupId>com.googlecode.json-simple</groupId>

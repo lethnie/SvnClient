@@ -19,29 +19,6 @@ import java.io.IOException;
  */
 public class SvnClientAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-        Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
-        /*try {
-            if (roles.contains("ROLE_PATIENT")) {
-                response.sendRedirect("patient/receptions.html");
-                return;
-            }
-            if (roles.contains("ROLE_DOCTOR")) {
-                response.sendRedirect("doctor.html");
-                return;
-            }
-            if (roles.contains("ROLE_NURSE")) {
-                response.sendRedirect("nurse.html");
-                return;
-            }
-            if (roles.contains("ROLE_REGISTRY")) {
-                response.sendRedirect("registry.html");
-                return;
-            }
-            //TODO: checkRoles
-        }
-        catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }*/
         try {
             response.sendRedirect("index.html");
             return;

@@ -42,7 +42,8 @@ public class RepositoryDAOImpl implements RepositoryDAO {
                 .add(Restrictions.eq("repository", repository))
                 .add(Restrictions.eq("user", user))
                 .uniqueResult();
-        Hibernate.initialize(result.getUser());
+        if (result != null)
+            Hibernate.initialize(result.getUser());
         return result;
     }
 }

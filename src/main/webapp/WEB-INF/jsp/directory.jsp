@@ -36,16 +36,12 @@
             });
 
             $(document).on('click', "#id_download", function() {
-                //alert("download! he-he");
-                var filepath = "";//http://svn.svnkit.com/repos/svnkit/trunk";
+                var filepath = "";
                 $("#id_path").children().each(function() {
                     var fpath = $(this).text().trim();
-                    //if (fpath != "..")
-                    //    filepath = filepath.concat(fpath);
+                    filepath = filepath.concat(fpath);
                 });
-                //alert(filepath);
                 filepath = encodeURIComponent(filepath);
-                //TODO: full filepath, parse filepath
                 var link = "/SvnClient/get_file.html?filepath=" + filepath;
                 $("#id_download_href").attr("href", link);
             });
@@ -58,7 +54,7 @@
                 });
                 $.ajax({
                     type: 'POST',
-                    url: 'get_data.html',
+                    url: '/SvnClient/get_data.html',
                     dataType: "text",
                     async: false,
                     data: JSON.stringify({ filepath: filepath }),

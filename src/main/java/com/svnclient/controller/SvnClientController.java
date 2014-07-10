@@ -65,67 +65,8 @@ public class SvnClientController {
                 model.addAttribute("auth_status", auth_status);
                 return "index";
             } else {
-                return "redirect:directory.html";
+                return "redirect:repositories.html";
             }
-        }
-    }
-
-    //get first directory content
-    @RequestMapping(value = "/directory.html")
-    public String content(Model model) {
-        //TODO: delete method
-        String url = "http://svn.svnkit.com/repos/svnkit/trunk/";
-        String filePath = "";
-
-        String name;
-        String password;
-        System.out.println(SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal().toString());
-        User user = (User) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-        name = user.getUsername();
-        password = user.getPassword();
-        //TODO: delete
-        System.out.println(name + " " + password);
-        name = "anonymous";
-        password = "anonymous";
-        setupLibrary();
-
-        SVNRepository repository = null;
-        try {
-            repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
-        } catch (SVNException svnex) {
-            return "wrong url: ".concat(url);
-        }
-
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(name, password);
-        repository.setAuthenticationManager(authManager);
-
-        try {
-            SVNNodeKind nodeKind = repository.checkPath(filePath, -1);
-            if (nodeKind == SVNNodeKind.DIR) {
-                List<FileInfo> files = getDirContent(repository, filePath);
-                model.addAttribute("files", files);
-                return "directory";
-            }
-            if (nodeKind == SVNNodeKind.FILE) {
-                String file = getFileContent(repository, filePath);
-                Integer count = StringUtils.countMatches(file, "\n");
-                count++;
-                file = file.replace("\n", "<br>");
-                model.addAttribute("file", file);
-                model.addAttribute("count", count);
-                return "file";
-            }
-            model.addAttribute("file", "wrong file path: ".concat(filePath));
-            model.addAttribute("count", 1);
-            return "file";
-        } catch (SVNException svne) {
-            model.addAttribute("file", "error while fetching the file contents and properties: " + svne.getMessage());
-            model.addAttribute("count", 1);
-            return "file";
         }
     }
 
@@ -142,12 +83,10 @@ public class SvnClientController {
                 .getPrincipal()).getUsername();
         UserTable user = userService.findUserByName(username);
         String url = String.format("/svn/%s/%s.html", username, rep.getRepository());
-        //TODO: smth
         String localURL = String.format("/svn/%s/%s", username, rep.getRepository());
         rep.setUser(user);
         rep.setLocalURL(localURL);
         rep.setUrl(url);
-
 
         ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user.getName(), user.getPassword());
         ISVNOptions options = SVNWCUtil.createDefaultOptions(true);
@@ -163,12 +102,9 @@ public class SvnClientController {
         return "redirect:".concat(url);
     }
 
-    //TODO: server???
     @RequestMapping(value = "/svn/{username}/{name}")
     public String getSvnRep(Model model, @PathVariable("username") String username,
                             @PathVariable("name") String name) {
-        //System.out.println("SVN!!! ");
-
         String usern = ((User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal()).getUsername();
@@ -197,25 +133,11 @@ public class SvnClientController {
                 model.addAttribute("files", files);
                 return "directory";
             }
-            //TODO: delete file cases
-            if (nodeKind == SVNNodeKind.FILE) {
-                String file = getFileContent(repository, filePath);
-                Integer count = StringUtils.countMatches(file, "\n");
-                count++;
-                file = file.replace("\n", "<br>");
-                model.addAttribute("repository_name", name);
-                model.addAttribute("file", file);
-                model.addAttribute("count", count);
-                return "file";
-            }
-            model.addAttribute("file", "wrong file path: ".concat(filePath));
-            model.addAttribute("count", 1);
-            return "file";
+            model.addAttribute("error_message", "wrong file path: ".concat(filePath));
+            return getRepositories(model);
         } catch (SVNException svne) {
-            model.addAttribute("file", "error while fetching the file contents and properties: " + svne.getMessage());
-            model.addAttribute("repository_name", name);
-            model.addAttribute("count", 1);
-            return "file";
+            model.addAttribute("error_message", "error while fetching the file contents and properties: " + svne.getMessage());
+            return getRepositories(model);
         }
     }
 
@@ -322,7 +244,6 @@ public class SvnClientController {
     @RequestMapping(value="/get_data.html", method=RequestMethod.POST)
     public @ResponseBody
     String getData(@RequestBody String param) {
-        //TODO: check
         String filepath = "";
 
         JSONParser parser = new JSONParser();
@@ -337,37 +258,27 @@ public class SvnClientController {
             e.printStackTrace();
         }
 
-        //filepath = filepath.replaceFirst("..", "");
-        //filepath = filepath.replaceFirst("/", "");
         int index = filepath.indexOf('/');
-        String rep = filepath.substring(0, index - 1);
-        filepath = filepath.substring(index + 1);
+        String rep = "";
+        if (index < 0) {
+            rep = filepath;
+            filepath = "";
+        } else {
+            rep = filepath.substring(0, index);
+            filepath = filepath.substring(index + 1);
+        }
+
         filepath = filepath.replace(" ","");
         String usern = ((User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal()).getUsername();
         UserTable user = userService.findUserByName(usern);
         RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(rep, user);
-        String url = repositoryTable.getLocalURL();//"http://svn.svnkit.com/repos/svnkit/trunk/";
-
-        /*String name;
-        String password;
-        System.out.println(SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal().toString());
-        User user = (User) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
-        name = user.getUsername();
-        password = userService.findUserByName(user.getUsername()).getPassword();*/
-        //System.out.println(name + " " + password);
-        //name = "anonymous";
-        //password = "anonymous";
+        String url = repositoryTable.getLocalURL();
 
         setupLibrary();
 
-        SVNRepository repository = null;
-        System.out.println("PATH: " + filepath + ", URL: " + url);
+        SVNRepository repository;
         try {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
         } catch (SVNException svnex) {
@@ -424,7 +335,7 @@ public class SvnClientController {
                              final HttpServletResponse response) throws IOException {
         try {
             int index = filepath.indexOf('/');
-            String rep = filepath.substring(0, index - 1);
+            String rep = filepath.substring(0, index);
             filepath = filepath.substring(index + 1);
             filepath = filepath.replace(" ","");
             String usern = ((User) SecurityContextHolder.getContext()
@@ -432,16 +343,11 @@ public class SvnClientController {
                     .getPrincipal()).getUsername();
             UserTable user = userService.findUserByName(usern);
             RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(rep, user);
-            //TODO: correct url
-            //String url = repositoryTable.getLocalURL();
-            SVNURL url=SVNURL.parseURIEncoded(repositoryTable.getLocalURL());
+            SVNURL url = SVNURL.parseURIEncoded(repositoryTable.getLocalURL());
             SVNRepository repository = SVNRepositoryFactory.create(url);
             OutputStream outputStream = response.getOutputStream();
             filepath = java.net.URLDecoder.decode(filepath, "UTF-8");
-            filepath = filepath.replaceFirst("/", "");
-            //System.out.println("GET FILE: " + filepath);
             repository.getFile(filepath, -1, null, outputStream);
-            //System.out.println("GET FILE");
             response.setContentType("application/force-download");
             index = filepath.lastIndexOf('/');
             String filename = filepath.substring(index + 1);
