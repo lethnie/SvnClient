@@ -14,7 +14,7 @@
             var pass = $('#id_pass').val();
             $.ajax({
                 type: 'POST',
-                url: 'add_user.html',
+                url: '/SvnClient/add_user.html',
                 dataType: "text",
                 async: false,
                 data: JSON.stringify({ name: name, pass: pass }),
@@ -23,8 +23,8 @@
                     if (result == "ok") {
                         alert("You've signed up successfully");
                     }
-                    if (result == "error") {
-                        alert("User with this username already exists");
+                    else {
+                        alert(result);
                     }
                 },
                 error: function() {

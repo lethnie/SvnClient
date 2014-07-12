@@ -5,11 +5,11 @@ import com.svnclient.domain.UserTable;
 import com.svnclient.dto.FileInfo;
 import com.svnclient.service.RepositoryService;
 import com.svnclient.service.UserService;
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -71,19 +71,19 @@ public class SvnClientController {
     }
 
     @RequestMapping(value = "/new.html")
-    public String getNewRep(Map<String, Object> map, Model model) {
+    public String getNewRep(Map<String, Object> map) {
         map.put("rep", new RepositoryTable());
         return "new";
     }
 
     @RequestMapping(value = "/create.html", method = RequestMethod.POST)
-    public String createRep(@ModelAttribute("rep") RepositoryTable rep, Model model) {
+    public String createRep(@ModelAttribute("rep") RepositoryTable rep) {
         String username = ((User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal()).getUsername();
         UserTable user = userService.findUserByName(username);
         String url = String.format("/svn/%s/%s.html", username, rep.getRepository());
-        String localURL = String.format("/svn/%s/%s", username, rep.getRepository());
+        String localURL = String.format("src/main/webapp/svn/%s/%s", username, rep.getRepository());
         rep.setUser(user);
         rep.setLocalURL(localURL);
         rep.setUrl(url);
@@ -96,7 +96,8 @@ public class SvnClientController {
             rep.setLocalURL(svnurl.toString());
         }
         catch (SVNException ex) {
-            System.out.println(ex.getMessage());
+            //TODO: logger
+            //System.out.println(ex.getMessage());
         }
         repositoryService.addRep(rep);
         return "redirect:".concat(url);
@@ -116,7 +117,7 @@ public class SvnClientController {
 
         setupLibrary();
 
-        SVNRepository repository = null;
+        SVNRepository repository;
         try {
             repository = SVNRepositoryFactory.create(SVNURL.parseURIEncoded(url));
         } catch (SVNException svnex) {
@@ -167,7 +168,7 @@ public class SvnClientController {
             try {
                 result = baos.toString("UTF-8");
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                return "ioexception: " + ioe.getMessage();
             }
         } else {
             return "file contents can not be displayed.";
@@ -202,6 +203,7 @@ public class SvnClientController {
                 result.add(fileInfo);
             }
         } catch (SVNException ex) {
+            //TODO: logger
             return null;
         }
         return result;
@@ -225,11 +227,11 @@ public class SvnClientController {
             pass = (String) jsonObject.get("pass");
         }
         catch (ParseException e) {
-            e.printStackTrace();
+            return "Parse exception";
         }
 
         if (userService.findUserByName(name) != null) {
-            return "error";
+            return "User with this username already exists";
         }
 
         UserTable userTable = new UserTable();
@@ -255,11 +257,13 @@ public class SvnClientController {
             filepath = (String) jsonObject.get("filepath");
         }
         catch (ParseException e) {
-            e.printStackTrace();
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("type", "error");
+            return jsonObject.toJSONString();
         }
 
         int index = filepath.indexOf('/');
-        String rep = "";
+        String rep;
         if (index < 0) {
             rep = filepath;
             filepath = "";
@@ -354,6 +358,7 @@ public class SvnClientController {
             response.setHeader("Content-Disposition", String.format("attachment; filename=%s", filename));
             outputStream.close();
         } catch (SVNException ex) {
+            //TODO: logger?..
             System.out.println(ex.getMessage());
         }
     }
