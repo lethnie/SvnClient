@@ -16,6 +16,16 @@
 
     <script src="${pageContext.request.contextPath}/bootstrap/js/bootstrap.min.js"></script>
 
+    <script>
+
+        $(document).on('click', "img[name=delete]", function() {
+            if (confirm('Are you sure you want to delete this repository?')) {
+                var filepath = $(this).attr("id").trim();
+                var link = "/SvnClient/delete.html?filepath=" + filepath;
+                window.location.href = link;
+            }
+        });
+    </script>
     <meta charset="utf-8">
 
     <style type="text/css">
@@ -63,15 +73,17 @@
                 <tr>
                     <th>name</th>
                     <th>author</th>
+                    <th>delete</th>
                 </tr>
                 </thead>
                 <tbody>
                 <c:forEach items="${files}" var="file">
-                    <tr>
+                    <tr name="row">
                         <td><img src="<%=request.getContextPath() %>/images/dir.png" width="20px" height="20px" style="display:inline-block;"/>
                             <a style="display:inline-block;" href="/SvnClient/svn/${fn:escapeXml(file.user.name)}/${fn:escapeXml(file.repository)}.html">${fn:escapeXml(file.repository)}</a>
                         </td>
                         <td><p>${fn:escapeXml(file.user.name)}</p></td>
+                        <td><img src="<%=request.getContextPath() %>/images/delete.png" id="${fn:escapeXml(file.repository)}" name="delete" width="20px" height="20px" style="display:inline-block;"/></td>
                     </tr>
                 </c:forEach>
                 </tbody>

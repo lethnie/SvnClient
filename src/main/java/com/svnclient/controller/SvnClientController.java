@@ -24,11 +24,8 @@ import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.wc.ISVNOptions;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
-import org.tmatesoft.svn.core.wc.admin.SVNAdminClient;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -48,7 +45,9 @@ public class SvnClientController {
 
     @Autowired
     private RepositoryService repositoryService;
-
+    //TODO: check registration without database
+    //TODO: logger
+    //TODO: download
     @RequestMapping(value = "/index.html", method = RequestMethod.GET)
     public String index(Model model, @RequestParam(required=false) String auth_status) {
         model.addAttribute("auth_status", auth_status);
@@ -224,7 +223,11 @@ public class SvnClientController {
         UserTable userTable = new UserTable();
         userTable.setName(name);
         userTable.setPassword(pass);
-        userService.addUser(userTable);
+        try {
+            userService.addUser(userTable);
+        } catch (Exception ex) {
+            return ex.getMessage();
+        }
 
         return "ok";
     }
@@ -280,7 +283,7 @@ public class SvnClientController {
             return jsonObject.toJSONString();
         }
 
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user.getName(), user.getPassword());
+        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(repositoryTable.getLogin(), repositoryTable.getPassword());
         repository.setAuthenticationManager(authManager);
 
         try {
@@ -363,7 +366,7 @@ public class SvnClientController {
         UserTable user = userService.findUserByName(usern);
         RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(filepath, user);
         repositoryService.removeRepository(repositoryTable.getId());
-        return getRepositories(model);
+        return "redirect:repositories.html";
     }
 
     private void setupLibrary() {
