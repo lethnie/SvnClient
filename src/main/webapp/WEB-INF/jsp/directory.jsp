@@ -18,6 +18,8 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
+            $("#id_nav").prepend('<li id="id_delete"><a id="id_delete_href" href="">Delete Repository</a></li>');
+
             $(document).on('click', ".name", function() {
                 var filename = $(this).text();
                 $("#id_path").append($("<p></p>")
@@ -44,6 +46,15 @@
                 filepath = encodeURIComponent(filepath);
                 var link = "/SvnClient/get_file.html?filepath=" + filepath;
                 $("#id_download_href").attr("href", link);
+            });
+
+            $(document).on('click', "#id_delete", function() {
+                if (confirm('Are you sure you want to delete this repository?')) {
+                    var filepath = $("#id_path").children().get(0).text().trim();
+                    var link = "/SvnClient/delete.html?filepath=" + filepath;
+                    //$("#id_delete_href").attr("href", link);
+                    window.location.href = link;
+                }
             });
 
             function getFileData() {
@@ -126,6 +137,10 @@
 
                     }
                     $('p[name=id_text_name]').addClass("name text-link");
+                    return;
+                }
+                if (jsonData.type == "error") {
+                    alert(jsonData.message);
                     return;
                 }
                 alert(jsonData.type);

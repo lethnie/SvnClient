@@ -18,7 +18,9 @@ public class RepositoryTable implements Serializable {
     public static final String id_column = "repository_id";
     public static final String repository_column = "repository";
     public static final String url_column = "url";
-    public static final String local_url_column = "local_url";
+    public static final String login_column = "login";
+    public static final String password_column = "password";
+    //public static final String local_url_column = "local_url";
 
     public RepositoryTable() {
     }
@@ -27,7 +29,9 @@ public class RepositoryTable implements Serializable {
     private UserTable user;
     private String repository;
     private String url;
-    private String localURL;
+    private String login;
+    private String password;
+    //private String localURL;
 
     @ManyToOne(fetch= FetchType.LAZY)
     @JoinColumn(name=UserTable.id_column)
@@ -69,12 +73,30 @@ public class RepositoryTable implements Serializable {
         this.url = url;
     }
 
-    @Column(name=local_url_column, nullable = false)
+    @Column(name=login_column, nullable = true)
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    @Column(name=password_column, nullable = true)
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /*@Column(name=local_url_column, nullable = false)
     public String getLocalURL() {
         return localURL;
     }
 
     public void setLocalURL(String localURL) {
         this.localURL = localURL;
-    }
+    }*/
 }

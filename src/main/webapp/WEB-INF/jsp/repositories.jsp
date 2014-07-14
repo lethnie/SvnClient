@@ -69,7 +69,7 @@
                 <c:forEach items="${files}" var="file">
                     <tr>
                         <td><img src="<%=request.getContextPath() %>/images/dir.png" width="20px" height="20px" style="display:inline-block;"/>
-                            <a style="display:inline-block;" href="/SvnClient${fn:escapeXml(file.url)}">${fn:escapeXml(file.repository)}</a>
+                            <a style="display:inline-block;" href="/SvnClient/svn/${fn:escapeXml(file.user.name)}/${fn:escapeXml(file.repository)}.html">${fn:escapeXml(file.repository)}</a>
                         </td>
                         <td><p>${fn:escapeXml(file.user.name)}</p></td>
                     </tr>

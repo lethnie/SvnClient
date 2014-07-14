@@ -40,10 +40,16 @@
 <div class="container" align="center" style="padding-top: 40px;">
 
     <div class="form-signin">
-        <form:form role="form" method="post"  action="create.html" commandName="rep">
-            <h2 class="form-signin-heading">New Repository</h2>
+        <form:form role="form" method="post"  action="add.html" commandName="rep">
+            <h2 class="form-signin-heading">Repository</h2>
             <br>
             <form:input type="text" id="id_name" path="repository" class="form-control" style="height: auto; font-size: 16px; " placeholder="Name" />
+            <br>
+            <form:input type="text" id="id_url" path="url" class="form-control" style="height: auto; font-size: 16px; " placeholder="URL" />
+            <br>
+            <form:input type="text" id="id_login" path="login" class="form-control" style="height: auto; font-size: 16px; " placeholder="Login" />
+            <br>
+            <form:input type="password" id="id_password" path="password" class="form-control" style="height: auto; font-size: 16px; " placeholder="Password" />
             <br>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Create</button>
 

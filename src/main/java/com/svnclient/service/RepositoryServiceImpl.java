@@ -35,4 +35,9 @@ public class RepositoryServiceImpl implements RepositoryService {
     public RepositoryTable findRepositoryByNameAndUser(String repository, UserTable user) {
         return repositoryDAO.findRepositoryByNameAndUser(repository, user);
     }
+
+    @Transactional
+    public void removeRepository(Integer id) {
+        repositoryDAO.removeRepository(id);
+    }
 }

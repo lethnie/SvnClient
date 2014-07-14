@@ -18,4 +18,6 @@ public interface RepositoryDAO {
     public List<RepositoryTable> findRepositoriesByUser(UserTable user);
 
     public RepositoryTable findRepositoryByNameAndUser(String repository, UserTable user);
+
+    public void removeRepository(Integer id);
 }

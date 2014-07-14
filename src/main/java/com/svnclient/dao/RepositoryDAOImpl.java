@@ -46,4 +46,12 @@ public class RepositoryDAOImpl implements RepositoryDAO {
             Hibernate.initialize(result.getUser());
         return result;
     }
+
+    public void removeRepository(Integer id) {
+        RepositoryTable repositoryTable = (RepositoryTable) sessionFactory.getCurrentSession().load(
+                RepositoryTable.class, id);
+        if (null != repositoryTable) {
+            sessionFactory.getCurrentSession().delete(repositoryTable);
+        }
+    }
 }

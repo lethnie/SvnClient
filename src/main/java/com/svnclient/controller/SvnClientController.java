@@ -76,29 +76,14 @@ public class SvnClientController {
         return "new";
     }
 
-    @RequestMapping(value = "/create.html", method = RequestMethod.POST)
+    @RequestMapping(value = "/add.html", method = RequestMethod.POST)
     public String createRep(@ModelAttribute("rep") RepositoryTable rep) {
         String username = ((User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal()).getUsername();
         UserTable user = userService.findUserByName(username);
         String url = String.format("/svn/%s/%s.html", username, rep.getRepository());
-        String localURL = String.format("src/main/webapp/svn/%s/%s", username, rep.getRepository());
         rep.setUser(user);
-        rep.setLocalURL(localURL);
-        rep.setUrl(url);
-
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user.getName(), user.getPassword());
-        ISVNOptions options = SVNWCUtil.createDefaultOptions(true);
-        SVNAdminClient svnAdminClient = new SVNAdminClient(authManager, options);
-        try {
-            SVNURL svnurl = svnAdminClient.doCreateRepository(new File(localURL), null, true, false);
-            rep.setLocalURL(svnurl.toString());
-        }
-        catch (SVNException ex) {
-            //TODO: logger
-            //System.out.println(ex.getMessage());
-        }
         repositoryService.addRep(rep);
         return "redirect:".concat(url);
     }
@@ -110,9 +95,11 @@ public class SvnClientController {
                 .getAuthentication()
                 .getPrincipal()).getUsername();
         UserTable user = userService.findUserByName(usern);
-        ISVNAuthenticationManager authManager = SVNWCUtil.createDefaultAuthenticationManager(user.getName(), user.getPassword());
+
         RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(name, user);
-        String url = repositoryTable.getLocalURL();
+        ISVNAuthenticationManager authManager =
+                SVNWCUtil.createDefaultAuthenticationManager(repositoryTable.getLogin(), repositoryTable.getPassword());
+        String url = repositoryTable.getUrl();
         String filePath = "";
 
         setupLibrary();
@@ -259,6 +246,7 @@ public class SvnClientController {
         catch (ParseException e) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", "error");
+            jsonObject.put("message", e.getMessage());
             return jsonObject.toJSONString();
         }
 
@@ -278,7 +266,7 @@ public class SvnClientController {
                 .getPrincipal()).getUsername();
         UserTable user = userService.findUserByName(usern);
         RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(rep, user);
-        String url = repositoryTable.getLocalURL();
+        String url = repositoryTable.getUrl();
 
         setupLibrary();
 
@@ -288,6 +276,7 @@ public class SvnClientController {
         } catch (SVNException svnex) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", "error");
+            jsonObject.put("message", svnex.getMessage());
             return jsonObject.toJSONString();
         }
 
@@ -329,6 +318,7 @@ public class SvnClientController {
         } catch (SVNException svne) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", "error");
+            jsonObject.put("message", svne.getMessage());
             return jsonObject.toJSONString();
         }
     }
@@ -347,7 +337,7 @@ public class SvnClientController {
                     .getPrincipal()).getUsername();
             UserTable user = userService.findUserByName(usern);
             RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(rep, user);
-            SVNURL url = SVNURL.parseURIEncoded(repositoryTable.getLocalURL());
+            SVNURL url = SVNURL.parseURIEncoded(repositoryTable.getUrl());
             SVNRepository repository = SVNRepositoryFactory.create(url);
             OutputStream outputStream = response.getOutputStream();
             filepath = java.net.URLDecoder.decode(filepath, "UTF-8");
@@ -361,6 +351,19 @@ public class SvnClientController {
             //TODO: logger?..
             System.out.println(ex.getMessage());
         }
+    }
+
+    //delete repository from database
+    @RequestMapping(value = "/delete.html", method=RequestMethod.GET)
+    public String delete(Model model, @RequestParam String filepath) {
+        filepath = filepath.replace(" ","");
+        String usern = ((User) SecurityContextHolder.getContext()
+                    .getAuthentication()
+                    .getPrincipal()).getUsername();
+        UserTable user = userService.findUserByName(usern);
+        RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(filepath, user);
+        repositoryService.removeRepository(repositoryTable.getId());
+        return getRepositories(model);
     }
 
     private void setupLibrary() {
