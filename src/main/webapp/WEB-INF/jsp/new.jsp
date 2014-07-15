@@ -51,6 +51,10 @@
             <br>
             <form:input type="password" id="id_password" path="password" class="form-control" style="height: auto; font-size: 16px; " placeholder="Password" />
             <br>
+            <font color="FF0000">
+                    ${message}
+            </font>
+            <br>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Create</button>
 
         </form:form>

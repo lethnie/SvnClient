@@ -9,7 +9,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,15 +44,10 @@ public class SvnClientController {
 
     @Autowired
     private RepositoryService repositoryService;
-    //TODO: check registration without database
-    //TODO: logger
-    //TODO: download
+
     @RequestMapping(value = "/index.html", method = RequestMethod.GET)
     public String index(Model model, @RequestParam(required=false) String auth_status) {
         model.addAttribute("auth_status", auth_status);
-        System.out.println(SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal().toString());
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!auth.isAuthenticated()) {
             model.addAttribute("auth_status", auth_status);
@@ -76,7 +70,17 @@ public class SvnClientController {
     }
 
     @RequestMapping(value = "/add.html", method = RequestMethod.POST)
-    public String createRep(@ModelAttribute("rep") RepositoryTable rep) {
+    public String createRep(Model model, Map<String, Object> map, @ModelAttribute("rep") RepositoryTable rep) {
+        if (rep.getRepository() == "") {
+            model.addAttribute("message", "Repository name should not be empty!");
+            map.put("rep", rep);
+            return "new";
+        }
+        if (rep.getUrl() == "") {
+            model.addAttribute("message", "Repository URL should not be empty!");
+            map.put("rep", rep);
+            return "new";
+        }
         String username = ((User) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal()).getUsername();
@@ -189,7 +193,6 @@ public class SvnClientController {
                 result.add(fileInfo);
             }
         } catch (SVNException ex) {
-            //TODO: logger
             return null;
         }
         return result;
@@ -215,20 +218,17 @@ public class SvnClientController {
         catch (ParseException e) {
             return "Parse exception";
         }
-
-        if (userService.findUserByName(name) != null) {
-            return "User with this username already exists";
-        }
-
-        UserTable userTable = new UserTable();
-        userTable.setName(name);
-        userTable.setPassword(pass);
         try {
+            if (userService.findUserByName(name) != null) {
+                return "User with this username already exists";
+            }
+            UserTable userTable = new UserTable();
+            userTable.setName(name);
+            userTable.setPassword(pass);
             userService.addUser(userTable);
         } catch (Exception ex) {
             return ex.getMessage();
         }
-
         return "ok";
     }
 
@@ -330,6 +330,7 @@ public class SvnClientController {
     @RequestMapping(value = "/get_file.html", method=RequestMethod.GET)
     public void downloadFile(@RequestParam String filepath,
                              final HttpServletResponse response) throws IOException {
+
         try {
             int index = filepath.indexOf('/');
             String rep = filepath.substring(0, index);
@@ -342,8 +343,11 @@ public class SvnClientController {
             RepositoryTable repositoryTable = repositoryService.findRepositoryByNameAndUser(rep, user);
             SVNURL url = SVNURL.parseURIEncoded(repositoryTable.getUrl());
             SVNRepository repository = SVNRepositoryFactory.create(url);
-            OutputStream outputStream = response.getOutputStream();
+            ISVNAuthenticationManager authManager =
+                    SVNWCUtil.createDefaultAuthenticationManager(repositoryTable.getLogin(), repositoryTable.getPassword());
+            repository.setAuthenticationManager(authManager);
             filepath = java.net.URLDecoder.decode(filepath, "UTF-8");
+            OutputStream outputStream = response.getOutputStream();
             repository.getFile(filepath, -1, null, outputStream);
             response.setContentType("application/force-download");
             index = filepath.lastIndexOf('/');
@@ -351,8 +355,8 @@ public class SvnClientController {
             response.setHeader("Content-Disposition", String.format("attachment; filename=%s", filename));
             outputStream.close();
         } catch (SVNException ex) {
-            //TODO: logger?..
-            System.out.println(ex.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().println("<html><body><p>" + ex.getMessage() + "</p></body></html>");
         }
     }
 

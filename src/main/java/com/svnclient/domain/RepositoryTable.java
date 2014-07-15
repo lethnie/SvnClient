@@ -20,7 +20,6 @@ public class RepositoryTable implements Serializable {
     public static final String url_column = "url";
     public static final String login_column = "login";
     public static final String password_column = "password";
-    //public static final String local_url_column = "local_url";
 
     public RepositoryTable() {
     }
@@ -31,7 +30,6 @@ public class RepositoryTable implements Serializable {
     private String url;
     private String login;
     private String password;
-    //private String localURL;
 
     @ManyToOne(fetch= FetchType.LAZY)
     @JoinColumn(name=UserTable.id_column)
